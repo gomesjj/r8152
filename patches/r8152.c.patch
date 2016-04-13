@@ -1,0 +1,597 @@
+--- r8152_src/r8152.c	2016-04-04 15:48:47.000000000 +0100
++++ r8152-2.05.0_esxi/r8152.c	2016-04-12 13:43:49.000000000 +0100
+@@ -19,7 +19,9 @@
+ #include <linux/usb.h>
+ #include <linux/crc32.h>
+ #include <linux/if_vlan.h>
++#if !defined(__VMKLNX__)
+ #include <linux/uaccess.h>
++#endif /* #if !defined(__VMKLNX__) */
+ #include <linux/list.h>
+ #include <linux/ip.h>
+ #include <linux/ipv6.h>
+@@ -661,6 +663,38 @@
+ #define RTL_LIMITED_TSO_SIZE	(agg_buf_sz - sizeof(struct tx_desc) - \
+ 				 VLAN_ETH_HLEN - VLAN_HLEN)
+ 
++#if defined(__VMKLNX__)
++
++void *kmemdup(const void *src, size_t len, gfp_t gfp)
++{
++        void *p;
++
++        p = kmalloc(len, gfp);
++        if (p)
++                memcpy(p, src, len);
++        return p;
++}
++
++uint32_t bitreverse(uint32_t x)
++{
++       x = (x >> 16) | (x << 16);
++       x = (x >> 8 & 0x00ff00ff) | (x << 8 & 0xff00ff00);
++       x = (x >> 4 & 0x0f0f0f0f) | (x << 4 & 0xf0f0f0f0);
++       x = (x >> 2 & 0x33333333) | (x << 2 & 0xcccccccc);
++       x = (x >> 1 & 0x55555555) | (x << 1 & 0xaaaaaaaa);
++       return x;
++}
++
++u32 ethtool_op_get_rx_csum(struct net_device *dev)
++{
++#if defined(__VMKLNX__)
++        VMK_ASSERT(vmk_PreemptionIsEnabled() == VMK_FALSE);
++#endif
++     return (dev->features & NETIF_F_ALL_CSUM) != 0;
++}
++
++#endif /* defined(__VMKLNX__) */
++
+ static
+ int get_registers(struct r8152 *tp, u16 value, u16 index, u16 size, void *data)
+ {
+@@ -1073,13 +1107,16 @@
+ 
+ static inline struct net_device_stats *rtl8152_get_stats(struct net_device *dev)
+ {
++#if !defined(__VMKLNX__)
+ #if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,22)
+ 	struct rtl8152 *tp = netdev_priv(dev);
+-
+ 	return (struct net_device_stats *)&tp->stats;
+ #else
+ 	return &dev->stats;
+ #endif
++#else
++	return &dev->stats;
++#endif /* #if !defined(__VMKLNX__) */
+ }
+ 
+ static void read_bulk_callback(struct urb *urb)
+@@ -1292,15 +1329,23 @@
+ 
+ static int alloc_all_mem(struct r8152 *tp)
+ {
++#if !defined(__VMKLNX__)
+ 	struct net_device *netdev = tp->netdev;
++#endif /* #if !defined(__VMKLNX__) */
+ 	struct usb_interface *intf = tp->intf;
+ 	struct usb_host_interface *alt = intf->cur_altsetting;
+ 	struct usb_host_endpoint *ep_intr = alt->endpoint + 2;
+ 	struct urb *urb;
++#if !defined(__VMKLNX__)
+ 	int node, i;
++#else
++	int i;
++#endif /* #if !defined(__VMKLNX__) */
+ 	u8 *buf;
+ 
++#if !defined(__VMKLNX__)
+ 	node = netdev->dev.parent ? dev_to_node(netdev->dev.parent) : -1;
++#endif /* !defined(__VMKLNX__) */
+ 
+ 	spin_lock_init(&tp->rx_lock);
+ 	spin_lock_init(&tp->tx_lock);
+@@ -1309,14 +1354,22 @@
+ 	skb_queue_head_init(&tp->rx_queue);
+ 
+ 	for (i = 0; i < RTL8152_MAX_RX; i++) {
++#if !defined(__VMKLNX__)
+ 		buf = kmalloc_node(agg_buf_sz, GFP_KERNEL, node);
++#else
++		buf = kmalloc(agg_buf_sz, GFP_KERNEL);
++#endif /* !defined(__VMKLNX__) */
+ 		if (!buf)
+ 			goto err1;
+ 
+ 		if (buf != rx_agg_align(buf)) {
+ 			kfree(buf);
++#if !defined(__VMKLNX__)
+ 			buf = kmalloc_node(agg_buf_sz + RX_ALIGN, GFP_KERNEL,
+ 					   node);
++#else
++			buf = kmalloc(agg_buf_sz + RX_ALIGN, GFP_KERNEL);
++#endif /* #if !defined(__VMKLNX__) */
+ 			if (!buf)
+ 				goto err1;
+ 		}
+@@ -1335,14 +1388,22 @@
+ 	}
+ 
+ 	for (i = 0; i < RTL8152_MAX_TX; i++) {
++#if !defined(__VMKLNX__)
+ 		buf = kmalloc_node(agg_buf_sz, GFP_KERNEL, node);
++#else
++		buf = kmalloc(agg_buf_sz, GFP_KERNEL);
++#endif /* #if !defined(__VMKLNX__) */
+ 		if (!buf)
+ 			goto err1;
+ 
+ 		if (buf != tx_agg_align(buf)) {
+ 			kfree(buf);
++#if !defined(__VMKLNX__)
+ 			buf = kmalloc_node(agg_buf_sz + TX_ALIGN, GFP_KERNEL,
+ 					   node);
++#else
++			buf = kmalloc(agg_buf_sz + TX_ALIGN, GFP_KERNEL);
++#endif /* #if !defined(__VMKLNX__) */
+ 			if (!buf)
+ 				goto err1;
+ 		}
+@@ -1403,6 +1464,106 @@
+ 	return agg;
+ }
+ 
++#if defined(__VMKLNX__)
++
++/* Checksum skb data. */
++
++unsigned int skb_checksum(const struct sk_buff *skb, int offset,
++                          int len, unsigned int csum)
++{
++        int start = skb_headlen(skb);
++        int i, copy = start - offset;
++        int pos = 0;
++
++        /* Checksum header. */
++        if (copy > 0) {
++                if (copy > len)
++                        copy = len;
++                csum = csum_partial(skb->data + offset, copy, csum);
++                if ((len -= copy) == 0)
++                        return csum;
++                offset += copy;
++                pos     = copy;
++        }
++
++        for (i = 0; i < skb_shinfo(skb)->nr_frags; i++) {
++                int end;
++
++                BUG_TRAP(start <= offset + len);
++
++                end = start + skb_shinfo(skb)->frags[i].size;
++                if ((copy = end - offset) > 0) {
++                        unsigned int csum2;
++                        u8 *vaddr;
++                        skb_frag_t *frag = &skb_shinfo(skb)->frags[i];
++
++                        if (copy > len)
++                                copy = len;
++                        vaddr = kmap_skb_frag(frag);
++                        csum2 = csum_partial(vaddr + frag->page_offset +
++                                             offset - start, copy, 0);
++                        kunmap_skb_frag(vaddr);
++                        csum = csum_block_add(csum, csum2, pos);
++                        if (!(len -= copy))
++                                return csum;
++
++                        offset += copy;
++                        pos    += copy;
++                }
++                start = end;
++        }
++                if (skb_shinfo(skb)->frag_list) {
++                        struct sk_buff *list = skb_shinfo(skb)->frag_list;
++
++                        for (; list; list = list->next) {
++                                int end;
++
++                                BUG_TRAP(start <= offset + len);
++
++                                end = start + list->len;
++                                if ((copy = end - offset) > 0) {
++                                        unsigned int csum2;
++                                        if (copy > len)
++                                                copy = len;
++                                        csum2 = skb_checksum(list, offset - start,
++                                                             copy, 0);
++                                        csum = csum_block_add(csum, csum2, pos);
++                                        if ((len -= copy) == 0)
++                                                return csum;
++                                        offset += copy;
++                                        pos    += copy;
++                                }
++                                start = end;
++                        }
++                }
++                BUG_ON(len);
++
++                return csum;
++}
++
++struct sk_buff * r8152_skb_checksum_help(struct sk_buff *skb)
++{
++        int offset;
++        unsigned int csum;
++
++        offset = skb->h.raw - skb->data;
++        if (offset > (int)skb->len)
++                BUG();
++        csum = skb_checksum(skb, offset, skb->len-offset, 0);
++
++        offset = skb->tail - skb->h.raw;
++        if (offset <= 0)
++                BUG();
++        if (skb->csum+2 > offset)
++                BUG();
++
++        *(u16*)(skb->h.raw + skb->csum) = csum_fold(csum);
++        skb->ip_summed = CHECKSUM_NONE;
++        return skb;
++}
++
++#endif /* #if defined(__VMKLNX__) */
++
+ /* r8152_csum_workaround()
+  * The hw limites the value the transport offset. When the offset is out of the
+  * range, calculate the checksum by sw.
+@@ -1432,7 +1593,11 @@
+ 		skb_queue_splice(&seg_list, list);
+ 		dev_kfree_skb(skb);
+ 	} else if (skb->ip_summed == CHECKSUM_PARTIAL) {
++#if !defined(__VMKLNX__)
+ 		if (skb_checksum_help(skb) < 0)
++#else
++		if (r8152_skb_checksum_help(skb) < 0)
++#endif /* #if !defined(__VMKLNX__) */
+ 			goto drop;
+ 
+ 		__skb_queue_head(list, skb);
+@@ -1452,7 +1617,11 @@
+  */
+ static int msdn_giant_send_check(struct sk_buff *skb)
+ {
++#if defined(__VMKLNX__)
++    	struct ipv6hdr *ipv6h;
++#else
+ 	const struct ipv6hdr *ipv6h;
++#endif /* #if defined(__VMKLNX__) */
+ 	struct tcphdr *th;
+ 	int ret;
+ 
+@@ -1556,11 +1725,20 @@
+ 		}
+ 
+ 		switch (vlan_get_protocol(skb)) {
++#if !defined(__VMKLNX__)
+ 		case htons(ETH_P_IP):
++#else
++		case __constant_htons(ETH_P_IP):
++#endif /* !defined(__VMKLNX__) */
++
+ 			opts1 |= GTSENDV4;
+ 			break;
+ 
++#if !defined(__VMKLNX__)
+ 		case htons(ETH_P_IPV6):
++#else
++		case __constant_htons(ETH_P_IPV6):
++#endif /* !defined(__VMKLNX__) */
+ 			if (msdn_giant_send_check(skb)) {
+ 				ret = TX_CSUM_TSO;
+ 				goto unavailable;
+@@ -1587,12 +1765,20 @@
+ 		}
+ 
+ 		switch (vlan_get_protocol(skb)) {
++#if !defined(__VMKLNX__)
+ 		case htons(ETH_P_IP):
++#else
++		case __constant_htons(ETH_P_IP):
++#endif /* !defined(__VMKLNX__) */
+ 			opts2 |= IPV4_CS;
+ 			ip_protocol = ip_hdr(skb)->protocol;
+ 			break;
+ 
++#if !defined(__VMKLNX__)
+ 		case htons(ETH_P_IPV6):
++#else
++		case __constant_htons(ETH_P_IPV6):
++#endif /* !defined(__VMKLNX__) */
+ 			opts2 |= IPV6_CS;
+ 			ip_protocol = ipv6_hdr(skb)->nexthdr;
+ 			break;
+@@ -1974,6 +2160,16 @@
+ 	return work_done;
+ }
+ 
++#if defined(__VMKLNX__)
++static int r8152_poll(struct napi_struct *napi, int budget)
++{
++        struct r8152 *tp = container_of(napi, struct r8152, napi);
++
++        return __r8152_poll(tp, budget);
++}
++
++#else
++
+ #if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,24)
+ 
+ static int r8152_poll(struct net_device *dev, int *budget)
+@@ -2001,6 +2197,8 @@
+ 
+ #endif /* LINUX_VERSION_CODE < KERNEL_VERSION(2,6,24) */
+ 
++#endif /* defined(__VMKLNX__) */
++
+ static
+ int r8152_submit_rx(struct r8152 *tp, struct rx_agg *agg, gfp_t mem_flags)
+ {
+@@ -2067,6 +2265,7 @@
+ 	cancel_delayed_work(&tp->schedule);
+ }
+ 
++
+ static void rtl8152_set_rx_mode(struct net_device *netdev)
+ {
+ 	struct r8152 *tp = netdev_priv(netdev);
+@@ -2074,6 +2273,7 @@
+ 	__le32 tmp[2];
+ 	u32 ocp_data;
+ 
++#if !defined(__VMKLNX__)
+ 	if (in_atomic()) {
+ 		if (netif_carrier_ok(netdev)) {
+ 			set_bit(RTL8152_SET_RX_MODE, &tp->flags);
+@@ -2081,7 +2281,7 @@
+ 		}
+ 		return;
+ 	}
+-
++#endif /* #if !defined(__VMKLNX__) */
+ 
+ 	if (!netif_carrier_ok(netdev))
+ 		return;
+@@ -2369,6 +2569,9 @@
+ 	if (test_bit(RTL8152_UNPLUG, &tp->flags))
+ 		return -ENODEV;
+ 
++#if !defined(__VMKLNX__)
++	usb_disable_lpm(tp->udev);
++#endif /* !defined(__VMKLNX__) */
+ 	set_tx_qlen(tp);
+ 	rtl_set_eee_plus(tp);
+ 
+@@ -2394,8 +2597,9 @@
+ {
+ 	if (test_bit(RTL8152_UNPLUG, &tp->flags))
+ 		return -ENODEV;
+-
++#if !defined(__VMKLNX__)
+ 	usb_disable_lpm(tp->udev);
++#endif /* !defined(__VMKLNX__) */
+ 	set_tx_qlen(tp);
+ 	rtl_set_eee_plus(tp);
+ 	r8153_set_rx_early_timeout(tp);
+@@ -4713,7 +4917,9 @@
+ 	r8153_disable_aldps(tp);
+ 	rtl_disable(tp);
+ 	r8153_enable_aldps(tp);
++#if !defined(__VMKLNX__)
+ 	usb_enable_lpm(tp->udev);
++#endif /* #if !defined(__VMKLNX__) */
+ }
+ 
+ static int rtl8152_set_speed(struct r8152 *tp, u8 autoneg, u16 speed, u8 duplex)
+@@ -4842,7 +5048,9 @@
+ 	r8153_enable_aldps(tp);
+ 	r8153_u2p3en(tp, true);
+ 	r8153_u1u2en(tp, true);
++#if !defined(__VMKLNX__)
+ 	usb_enable_lpm(tp->udev);
++#endif /* #if !defined(__VMKLNX__) */
+ }
+ 
+ static void rtl8153_down(struct r8152 *tp)
+@@ -4929,6 +5137,8 @@
+ 	usb_autopm_put_interface(tp->intf);
+ }
+ 
++#if !defined(__VMKLNX__)
++
+ #if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,20)
+ 
+ static void rtl_work_func_t(void *data)
+@@ -4949,6 +5159,17 @@
+ 
+ #endif
+ 
++#else
++
++static void rtl_work_func_t(struct work_struct *work)
++{
++	struct r8152 *tp = container_of(work, struct r8152, schedule.work);
++
++	__rtl_work_func(tp);
++}
++
++#endif /* !defined(__VMKLNX__) */
++
+ static int rtk_disable_diag(struct r8152 *tp)
+ {
+ 	tp->rtk_enable_diag--;
+@@ -5268,8 +5489,9 @@
+ 			break;
+ 		msleep(20);
+ 	}
+-
++#if !defined(__VMKLNX__)
+ 	usb_disable_lpm(tp->udev);
++#endif /* !defined(__VMKLNX__) */
+ 	r8153_u2p3en(tp, false);
+ 
+ 	if (tp->version == RTL_VER_04) {
+@@ -5877,9 +6099,15 @@
+ }
+ 
+ static int
++#if !defined(__VMKLNX__)
+ rtl_ethtool_get_eee(struct net_device *net, struct ethtool_eee *edata)
+ {
+ 	struct r8152 *tp = netdev_priv(net);
++#else
++rtl_ethtool_get_eee(struct net_device *netdev, struct ethtool_eee *edata)
++{
++	struct r8152 *tp = netdev_priv(netdev);
++#endif /* !defined(__VMKLNX__) */
+ 	int ret;
+ 
+ 	if (unlikely(tp->rtk_enable_diag))
+@@ -5902,9 +6130,15 @@
+ }
+ 
+ static int
++#if !defined(__VMKLNX__)
+ rtl_ethtool_set_eee(struct net_device *net, struct ethtool_eee *edata)
+ {
+ 	struct r8152 *tp = netdev_priv(net);
++#else
++rtl_ethtool_set_eee(struct net_device *netdev, struct ethtool_eee *edata)
++{
++	struct r8152 *tp = netdev_priv(netdev);
++#endif /* !defined(__VMKLNX__) */
+ 	int ret;
+ 
+ 	if (unlikely(tp->rtk_enable_diag))
+@@ -5929,9 +6163,15 @@
+ }
+ #endif /* LINUX_VERSION_CODE >= KERNEL_VERSION(3,6,0) */
+ 
++#if !defined(__VMKLNX__)
+ static int rtl8152_nway_reset(struct net_device *dev)
+ {
+ 	struct r8152 *tp = netdev_priv(dev);
++#else
++static int rtl8152_nway_reset(struct net_device *netdev)
++{
++	struct r8152 *tp = netdev_priv(netdev);
++#endif /* !defined(__VMKLNX__) */
+ 	int ret;
+ 
+ 	if (unlikely(tp->rtk_enable_diag))
+@@ -6026,6 +6266,9 @@
+ #if LINUX_VERSION_CODE < KERNEL_VERSION(3,3,0)
+ 	.get_tx_csum = ethtool_op_get_tx_csum,
+ 	.set_tx_csum = ethtool_op_set_tx_csum,
++#if defined(__VMKLNX__)
++	.get_rx_csum = ethtool_op_get_rx_csum,
++#endif /* #if defined(__VMKLNX__) */
+ 	.get_sg = ethtool_op_get_sg,
+ 	.set_sg = ethtool_op_set_sg,
+ #ifdef NETIF_F_TSO
+@@ -6283,16 +6526,26 @@
+ 	return ret;
+ }
+ 
++#if !defined(__VMKLNX__)
+ static int rtl8152_change_mtu(struct net_device *dev, int new_mtu)
+ {
+ 	struct r8152 *tp = netdev_priv(dev);
++#else
++static int rtl8152_change_mtu(struct net_device *netdev, int new_mtu)
++{
++	struct r8152 *tp = netdev_priv(netdev);
++#endif /* #if !defined(__VMKLNX__) */
+ 	int ret;
+ 
+ 	switch (tp->version) {
+ 	case RTL_VER_01:
+ 	case RTL_VER_02:
+ 	case RTL_VER_07:
++#if !defined(__VMKLNX__)
+ 		return eth_change_mtu(dev, new_mtu);
++#else
++		return eth_change_mtu(netdev, new_mtu);
++#endif /* #if !defined(__VMKLNX__) */
+ 	default:
+ 		break;
+ 	}
+@@ -6305,15 +6558,22 @@
+ 		return ret;
+ 
+ 	mutex_lock(&tp->control);
+-
++#if !defined(__VMKLNX__)
+ 	dev->mtu = new_mtu;
+-
+ 	if (netif_running(dev)) {
++#else
++	netdev->mtu = new_mtu;
++	if (netif_running(netdev)) {
++#endif /* #if !defined(__VMKLNX__) */
+ 		u32 rms = new_mtu + VLAN_ETH_HLEN + VLAN_HLEN;
+ 
+ 		ocp_write_word(tp, MCU_TYPE_PLA, PLA_RMS, rms);
+ 
++#if !defined(__VMKLNX__)
+ 		if (netif_carrier_ok(dev))
++#else
++		if (netif_carrier_ok(netdev))
++#endif /* #if !defined(__VMKLNX__) */
+ 			r8153_set_rx_early_size(tp);
+ 	}
+ 
+@@ -6459,11 +6719,15 @@
+ 	int ret;
+ 
+ 	if (!rtl_vendor_mode(intf)) {
++#if defined(__VMKLNX__)
++                usb_driver_set_configuration(udev, 1);
++#else
+ #if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,19)
+ 		dev_err(&intf->dev, "The kernel too old to set configuration\n");
+ #else
+ 		usb_driver_set_configuration(udev, 1);
+ #endif
++#endif /* #if defined(__VMKLNX__) */
+ 		return -ENODEV;
+ 	}
+ 
+@@ -6473,8 +6737,9 @@
+ 		dev_err(&intf->dev, "Out of memory\n");
+ 		return -ENOMEM;
+ 	}
+-
++#if !defined(__VMKLNX__)
+ 	SET_NETDEV_DEV(netdev, &intf->dev);
++#endif /* !defined(__VMKLNX__) */
+ 	tp = netdev_priv(netdev);
+ 	tp->msg_enable = 0x7FFF;
+ 
+@@ -6527,6 +6792,7 @@
+ #endif /* LINUX_VERSION_CODE > KERNEL_VERSION(2,6,38) */
+ 
+ 	netdev->ethtool_ops = &ops;
++
+ #if LINUX_VERSION_CODE > KERNEL_VERSION(2,6,25)
+ 	netif_set_gso_max_size(netdev, RTL_LIMITED_TSO_SIZE);
+ #else
+@@ -6655,6 +6921,9 @@
+ #if LINUX_VERSION_CODE >= KERNEL_VERSION(3,5,0)
+ 	.disable_hub_initiated_lpm = 1,
+ #endif
++#if defined(__VMKLNX__)
++        .module =       THIS_MODULE,
++#endif /* defined(__VMKLNX__) */
+ };
+ 
+ module_usb_driver(rtl8152_driver);
