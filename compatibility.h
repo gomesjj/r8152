@@ -16,6 +16,8 @@
 #endif /* LINUX_VERSION_CODE >= KERNEL_VERSION(3,7,0) */
 #endif /* LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,31) */
 
+#if LINUX_VERSION_CODE < KERNEL_VERSION(4,5,0)
+	#define NETIF_F_CSUM_MASK			NETIF_F_ALL_CSUM
 #if LINUX_VERSION_CODE < KERNEL_VERSION(4,0,0)
 	#define skb_vlan_tag_present(__skb)		vlan_tx_tag_present(__skb)
 	#define skb_vlan_tag_get(__skb)			vlan_tx_tag_get(__skb)
@@ -155,6 +157,8 @@ u32 ethtool_op_get_rx_csum(struct net_device *dev);
 #if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,36)
 	#define skb_tx_timestamp(skb)
 
+	#define queue_delayed_work(long_wq, work, delay)	schedule_delayed_work(work, delay)
+
 	static inline void usleep_range(unsigned long min, unsigned long max)
 	{
 		unsigned long ms = min / 1000;
@@ -200,7 +204,7 @@ u32 ethtool_op_get_rx_csum(struct net_device *dev);
 	static inline int usb_disable_autosuspend(struct usb_device *udev)
 	{ return 0; }
 #endif /* #if !defined(__VMKLNX__) */
-
+	
 #if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,33)
 	#define get_sset_count				get_stats_count
 
@@ -229,11 +233,11 @@ u32 ethtool_op_get_rx_csum(struct net_device *dev);
 #if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,31)
 
 #if !defined(__VMKLNX__)
-        #define USB_SPEED_SUPER                         (USB_SPEED_VARIABLE + 1)
+        #define USB_SPEED_SUPER			(USB_SPEED_VARIABLE + 1)
 #else
 	#define USB_SPEED_SUPER				(USB_SPEED_WIRELESS + 1)
 #endif /* #if !defined(__VMKLNX__) */
-
+	
 	#define MDIO_MMD_AN				7	/* Auto-Negotiation */
 #if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,29)
 	#define napi_gro_receive(napi, skb)		netif_receive_skb(skb)
@@ -286,7 +290,7 @@ u32 ethtool_op_get_rx_csum(struct net_device *dev);
 		return 0;
 	}
 #endif /* #if !defined(__VMKLNX__) */
-
+	
 #if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,28)
 	static inline void __skb_queue_splice(const struct sk_buff_head *list,
 					      struct sk_buff *prev,
@@ -351,7 +355,7 @@ u32 ethtool_op_get_rx_csum(struct net_device *dev);
                         __list_splice2(list, head->prev, head);
         }
 #endif /* !defined(__VMKLNX__) */
-
+		
 #if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,24)
 
 #if !defined(__VMKLNX__)
@@ -423,6 +427,7 @@ u32 ethtool_op_get_rx_csum(struct net_device *dev);
 #endif /* #if !defined(__VMKLNX__) */
 
 #if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,19)
+
 #if !defined(__VMKLNX__)
         #define CHECKSUM_PARTIAL                        CHECKSUM_HW
 
@@ -507,6 +512,7 @@ u32 ethtool_op_get_rx_csum(struct net_device *dev);
 #endif /* LINUX_VERSION_CODE < KERNEL_VERSION(3,13,0) */
 #endif /* LINUX_VERSION_CODE < KERNEL_VERSION(3,14,0) */
 #endif /* LINUX_VERSION_CODE < KERNEL_VERSION(4,0,0) */
+#endif /* LINUX_VERSION_CODE < KERNEL_VERSION(4,5,0) */
 
 #ifndef FALSE
 	#define TRUE	1
