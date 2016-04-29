@@ -7253,16 +7253,10 @@ static int rtl8152_probe(struct usb_interface *intf,
 
 	netdev->watchdog_timeo = RTL8152_TX_TIMEOUT;
 
-#if !defined(__VMKLNX__)
         netdev->features |= NETIF_F_RXCSUM | NETIF_F_IP_CSUM | NETIF_F_SG |
                             NETIF_F_TSO | NETIF_F_FRAGLIST | NETIF_F_IPV6_CSUM |
                             NETIF_F_TSO6 | NETIF_F_HW_VLAN_CTAG_RX |
                             NETIF_F_HW_VLAN_CTAG_TX;
-#else
-        netdev->features |= NETIF_F_RXCSUM | NETIF_F_IP_CSUM | NETIF_F_TSO |
-                            NETIF_F_FRAGLIST | NETIF_F_HW_VLAN_CTAG_RX |
-                            NETIF_F_HW_VLAN_CTAG_TX;
-#endif /* #if !defined(__VMKLNX__) */
 
 #if LINUX_VERSION_CODE > KERNEL_VERSION(2,6,38)
 	netdev->hw_features = NETIF_F_RXCSUM | NETIF_F_IP_CSUM | NETIF_F_SG |
