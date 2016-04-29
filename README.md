@@ -7,14 +7,12 @@ Key features:
 * Supports Realtek RTL8153 and RTL8152
 * TCP, UDP and IPv4 checksum offload (RX and TX)
 * TCP, UDP and IPv6 checksum offload (RX and TX)
-* Scatter-Gather support -- Disabled (\*)
-* TCP Segmentation Offload support -- Disable (\*)
+* Scatter-Gather support
+* TCP Segmentation Offload support
 * Wake on LAN support
 * VLAN support
 * Jumbo Frames (9k)
 * Energy Efficient Ethernet (EEE)
-
-\* Features are not supported by usbnet (not even on Linux). Tests show no appreciable decrease in throughput.
 
 Known issues
 
