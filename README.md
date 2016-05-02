@@ -36,7 +36,7 @@ The following device were tested with this driver.
 
 * [ANKER Aluminum USB 3.0 to Ethernet Adapter](https://www.amazon.co.uk/Anker-AK-A7611011-USB-1000Mbit-networking/dp/B00PC0P2DI?ie=UTF8&*Version*=1&*entries*=0)
 
-I have not tested any other adapters, but devices based on the same chipset should work, such as the TP-LINK UE300 or the INOCREST IO-USB8153D-GLAN
+I have not tested any other adapters, but devices based on the same chipset should work, such as the [TP-LINK UE300](https://www.amazon.co.uk/gp/product/B00YOKMKE6/ref=pe_1959711_130662621_em_1p_0_ti)
 
 ### Required Software
 
