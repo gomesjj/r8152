@@ -32,11 +32,13 @@ This message can be safely ignored, however,  if the module is reloaded, the vmn
 
 ### Tested Devices
 
-The following device were tested with this driver.
+The following devices were tested with this driver.
 
 * [ANKER Aluminum USB 3.0 to Ethernet Adapter](https://www.amazon.co.uk/Anker-AK-A7611011-USB-1000Mbit-networking/dp/B00PC0P2DI?ie=UTF8&*Version*=1&*entries*=0)
 
-I have not tested any other adapters, but devices based on the same chipset should work, such as the [TP-LINK UE300](https://www.amazon.co.uk/gp/product/B00YOKMKE6/ref=pe_1959711_130662621_em_1p_0_ti)
+* [Anker USB 3.0 to RJ45 Gigabit Ethernet Adapter](https://www.amazon.co.uk/dp/B00NPJP33M/ref=pd_lpo_sbs_dp_ss_1?pf_rd_p=569136327&pf_rd_s=lpo-top-stripe&pf_rd_t=201&pf_rd_i=B00DNU8Y20&pf_rd_m=A3P5ROKL5A1OLE&pf_rd_r=C5N2DD7H2D7AVRXM1VHP)
+
+I have not tested it, but other devices based on the same chipset should work, such as the [TP-LINK UE300](https://www.amazon.co.uk/gp/product/B00YOKMKE6/ref=pe_1959711_130662621_em_1p_0_ti)
 
 ### Required Software
 
