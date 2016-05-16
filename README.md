@@ -152,6 +152,7 @@ cd /build/toolchain/src/binutils-2.20.1-1
 
 ```sh
 cd /build/toolchain/src/gcc-4.4.3-2
+. ./install.sh
 ```
 
 
