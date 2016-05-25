@@ -31,7 +31,7 @@
 #include "compatibility.h"
 
 /* Version Information */
-#define DRIVER_VERSION "v2.05.0 (2015/06/09)"
+#define DRIVER_VERSION "v2.06.0 (2016/01/14)"
 #define DRIVER_AUTHOR "Realtek nic sw <nic_swsd@realtek.com>"
 #define DRIVER_DESC "Realtek RTL8152/RTL8153 Based USB Ethernet Adapters"
 #define MODULENAME "r8152"
