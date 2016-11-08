@@ -38,7 +38,9 @@ The following devices were tested with this driver.
 
 * [ANKER USB 3.0 to RJ45 Gigabit Ethernet Adapter](https://www.amazon.co.uk/dp/B00NPJP33M/ref=pd_lpo_sbs_dp_ss_1?pf_rd_p=569136327&pf_rd_s=lpo-top-stripe&pf_rd_t=201&pf_rd_i=B00DNU8Y20&pf_rd_m=A3P5ROKL5A1OLE&pf_rd_r=C5N2DD7H2D7AVRXM1VHP)
 
-I have not tested it, but other devices based on the same chipset should work, such as the [TP-LINK UE300](https://www.amazon.co.uk/gp/product/B00YOKMKE6/ref=pe_1959711_130662621_em_1p_0_ti)
+* [TP-LINK UE300](https://www.amazon.co.uk/gp/product/B00YOKMKE6/ref=pe_1959711_130662621_em_1p_0_ti)
+
+* [Rankie SuperSpeed USB 3.0 to RJ45 Gigabit Ethernet Network Adapter](https://www.amazon.co.uk/gp/product/B010SEARPU/ref=ox_sc_act_title_1?ie=UTF8&psc=1&smid=A7ZMMLW05YAY7)
 
 ### Required Software
 
@@ -52,9 +54,9 @@ VMware ESXi 5.5 source code (VMware-ESX-5.5.0u03-ODP.iso) and build toolchain (V
 
 * ESXi 5.5 Update 3 OSS Download - <https://my.vmware.com/web/vmware/details?downloadGroup=ESXI55U3_OSS&productId=353>
 
-VMware ESXi 5.1 source code and build toolchain are both included in a single file (VMware-esx-open-source-5.0.0u2.oss.tgz).
+VMware ESXi 5.1 source code and build toolchain are both included in a single file (VMware-esx-open-source-5.1.0u2.oss.tar).
 
-* ESXi 5.1 Update 2 OSS Download - <https://my.vmware.com/web/vmware/details?productId=229&downloadGroup=VSPHERE50U2_OSS>
+* ESXi 5.1 Update 2 OSS Download - <https://my.vmware.com/group/vmware/details?downloadGroup=VSPHERE_51U2_OSS&productId=290#>
 
 ### Setup
 
@@ -78,7 +80,7 @@ Extract the contents of the compressed tar archive to /build/vsphere:
 
 ~~~sh
 cd /build/vsphere
-tar zxvf /path/to/VMware-esx-open-source-5.0.0u2.oss.tgz
+tar xvf /path/to/VMware-esx-open-source-5.1.0u2.oss.tar --strip-components=1 server/vmkdrivers-gpl
 cd vmkdrivers-gpl
 ~~~
 You are now ready to compile the build toolchain:
@@ -87,7 +89,7 @@ _glibc_
 
 ~~~sh
 cd glibc-2.3.2-95.44
-. BUILD.txt
+bash ./BUILD.txt
 cd ..
 ~~~
 
@@ -95,7 +97,7 @@ _binutils_
 
 ~~~sh
 cd binutils-2.17.50.0.15-modcall
-. BUILD.txt
+bash ./BUILD.txt
 cd ..
 ~~~
 
@@ -103,7 +105,7 @@ _gcc_
 
 ~~~sh	
 cd gcc-4.1.2-9
-. BUILD.txt
+bash ./BUILD.txt
 cd ..		
 ~~~
 
@@ -165,31 +167,18 @@ There is a little bit more preparation to be done to build the driver. Again, so
 
 ```sh
 cd /build/vsphere/vmkdrivers-gpl
-tar zxvf vmkdriver-gpl.tgz
+tar zxvf vmkdrivers-gpl.tgz
 ```
 
 
 Create the directory for the driver's source code. The same source files are used to build the driver on all environments.
 
-<u>*ESXi 5.1*</u>
-
-```sh
-cd /build/vsphere/vmkdrivers-gpl
-mkdir vmkdrivers/src_9/drivers/usb/net/r8152-2.06.0
-cp /path/to/source/r8152.c vmkdrivers/src_9/drivers/usb/net/r8152-2.06.0/
-cp /path/to/source/compatibility.h vmkdrivers/src_9/drivers/usb/net/r8152-2.06.0/
-```
-
-<u>*ESXi 5.5 & 6.0*</u>
-
 ```sh
 cd /build/vsphere/vmkdrivers-gpl
 mkdir vmkdrivers/src_92/drivers/usb/net/r8152-2.06.0
-cp /path/to/source/r8152.c vmkdrivers/src_9/drivers/usb/net/r8152-2.06.0/
-cp /path/to/source/compatibility.h vmkdrivers/src_9/drivers/usb/net/r8152-2.06.0/
+cp /path/to/source/r8152.c vmkdrivers/src_92/drivers/usb/net/r8152-2.06.0/
+cp /path/to/source/compatibility.h vmkdrivers/src_92/drivers/usb/net/r8152-2.06.0/
 ```
-
-
 
 Create the directory that will hold the driver's namespace dependencies map:
 
@@ -197,10 +186,10 @@ Create the directory that will hold the driver's namespace dependencies map:
 
 ```sh
 cd /build/vsphere/vmkdrivers-gpl
-mkdir BLD/build/HEADERS/CUR-9-vmkdrivers-namespace/vmkernel64/release/r8152-2.06.0
-echo -e "VMK_NAMESPACE_REQUIRED("com.vmware.usb", "9.2.1.0");\
-\nVMK_NAMESPACE_REQUIRED("com.vmware.usbnet", "9.2.1.0");"\
-> BLD/build/HEADERS/92-vmkdrivers-namespace/vmkernel64/release/r8152-2.06.0/__namespace.h
+mkdir BLD/build/HEADERS/CUR-92-vmkdrivers-namespace/vmkernel64/release/r8152-2.06.0
+echo -e "VMK_NAMESPACE_REQUIRED(\"com.vmware.usb\", \"9.2.1.0\");\
+\nVMK_NAMESPACE_REQUIRED(\"com.vmware.usbnet\", \"9.2.1.0\");"\
+> BLD/build/HEADERS/CUR-92-vmkdrivers-namespace/vmkernel64/release/r8152-2.06.0/__namespace.h
 ```
 
 <u>*ESXi 5.5*</u>
@@ -208,8 +197,8 @@ echo -e "VMK_NAMESPACE_REQUIRED("com.vmware.usb", "9.2.1.0");\
 ```sh
 cd /build/vsphere/vmkdrivers-gpl
 mkdir BLD/build/HEADERS/CUR-92-vmkdrivers-namespace/vmkernel64/release/r8152-2.06.0
-echo -e "VMK_NAMESPACE_REQUIRED("com.vmware.usb", "9.2.2.0");\
-\nVMK_NAMESPACE_REQUIRED("com.vmware.usbnet", "9.2.2.0");"\
+echo -e "VMK_NAMESPACE_REQUIRED(\"com.vmware.usb\", \"9.2.2.0\");\
+\nVMK_NAMESPACE_REQUIRED(\"com.vmware.usbnet\", \"9.2.2.0\");"\
 > BLD/build/HEADERS/CUR-92-vmkdrivers-namespace/vmkernel64/release/r8152-2.06.0/__namespace.h
 ```
 
@@ -218,8 +207,8 @@ echo -e "VMK_NAMESPACE_REQUIRED("com.vmware.usb", "9.2.2.0");\
 ```sh
 cd /build/vsphere/vmkdrivers-gpl
 mkdir BLD/build/HEADERS/92-vmkdrivers-namespace/vmkernel64/release/r8152-2.06.0
-echo -e "VMK_NAMESPACE_REQUIRED("com.vmware.usb", "9.2.3.0");\
-\nVMK_NAMESPACE_REQUIRED("com.vmware.usbnet", "9.2.3.0");"\
+echo -e "VMK_NAMESPACE_REQUIRED(\"com.vmware.usb\", \"9.2.3.0\");\
+\nVMK_NAMESPACE_REQUIRED(\"com.vmware.usbnet\", \"9.2.3.0\");"\
 > BLD/build/HEADERS/92-vmkdrivers-namespace/vmkernel64/release/r8152-2.06.0/__namespace.h
 ```
 
