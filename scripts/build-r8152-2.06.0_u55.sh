@@ -25,7 +25,7 @@ XARGS=xargs
 MKDIR=mkdir
 
 # Create output directories
-$GREP -v -e "SED" build-r8152-2.06.0.sh \
+$GREP -v -e "SED" build-r8152-2.06.0_u55.sh \
 | $GREP -o -e "-o [^ ]*\."            \
 | $SED -e 's?-o \(.*\)/[^/]*\.?\1?'   \
 | $GREP -v -e "\*"                    \
