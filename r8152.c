@@ -31,7 +31,7 @@
 #include "compatibility.h"
 
 /* Version Information */
-#define DRIVER_VERSION "v2.06.0 (2016/01/14)"
+#define DRIVER_VERSION "v2.05.0 (2015/06/09)"
 #define DRIVER_AUTHOR "Realtek nic sw <nic_swsd@realtek.com>"
 #define DRIVER_DESC "Realtek RTL8152/RTL8153 Based USB Ethernet Adapters"
 #define MODULENAME "r8152"
@@ -6909,6 +6909,7 @@ static struct usb_device_id rtl8152_table[] = {
 
 	/* TP-LINK */
 	{REALTEK_USB_DEVICE(VENDOR_ID_TPLINK, 0x0601)},
+	{REALTEK_USB_DEVICE(VENDOR_ID_TPLINK, 0x0602)},
 	{}
 };
 
