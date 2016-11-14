@@ -40,7 +40,11 @@ The following devices were tested with this driver.
 
 * [TP-LINK UE300](https://www.amazon.co.uk/gp/product/B00YOKMKE6/ref=pe_1959711_130662621_em_1p_0_ti)
 
-* [Rankie SuperSpeed USB 3.0 to RJ45 Gigabit Ethernet Network Adapter](https://www.amazon.co.uk/gp/product/B010SEARPU/ref=ox_sc_act_title_1?ie=UTF8&psc=1&smid=A7ZMMLW05YAY7)
+* [Rankie SuperSpeed USB 3.0 to RJ45 Gigabit Ethernet Network Adapter](https://www.amazon.co.uk/gp/product/B010SEARPU/ref=ox_sc_act_title_1?ie=UTF8&psc=1&smid=A7ZMMLW05YAY7)  
+
+USB 2.0 Adapter (RTL8152B Chipset)
+
+* [TP-LINK UE200 USB 2.0 to 100 Mbps Ethernet Network Adapter](https://www.amazon.co.uk/TP-LINK-UE200-Ethernet-Foldable-Ultrabook/dp/B01GRY7RHG)
 
 ### Required Software
 
