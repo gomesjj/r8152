@@ -32,19 +32,25 @@ This message can be safely ignored, however,  if the module is reloaded, the vmn
 
 ### Tested Devices
 
-The following devices were tested with this driver.
-
 * [ANKER Aluminum USB 3.0 to Ethernet Adapter](https://www.amazon.co.uk/Anker-AK-A7611011-USB-1000Mbit-networking/dp/B00PC0P2DI?ie=UTF8&*Version*=1&*entries*=0)
 
 * [ANKER USB 3.0 to RJ45 Gigabit Ethernet Adapter](https://www.amazon.co.uk/dp/B00NPJP33M/ref=pd_lpo_sbs_dp_ss_1?pf_rd_p=569136327&pf_rd_s=lpo-top-stripe&pf_rd_t=201&pf_rd_i=B00DNU8Y20&pf_rd_m=A3P5ROKL5A1OLE&pf_rd_r=C5N2DD7H2D7AVRXM1VHP)
 
-* [TP-LINK UE300](https://www.amazon.co.uk/gp/product/B00YOKMKE6/ref=pe_1959711_130662621_em_1p_0_ti)
+* [TP-LINK UE300 USB 3.0 to Gigabit Ethernet Network Adapter](https://www.amazon.co.uk/gp/product/B00YOKMKE6/ref=pe_1959711_130662621_em_1p_0_ti)
 
-* [Rankie SuperSpeed USB 3.0 to RJ45 Gigabit Ethernet Network Adapter](https://www.amazon.co.uk/gp/product/B010SEARPU/ref=ox_sc_act_title_1?ie=UTF8&psc=1&smid=A7ZMMLW05YAY7)  
+* [Rankie SuperSpeed USB 3.0 to RJ45 Gigabit Ethernet Network Adapter](https://www.amazon.co.uk/gp/product/B010SEARPU/ref=ox_sc_act_title_1?ie=UTF8&psc=1&smid=A7ZMMLW05YAY7)
+
+Tested by Glen Kemp
+
+* [Anker Unibody 3-Port USB 3.0 and Ethernet Hub](https://www.amazon.co.uk/Anker®-Unibody-Ethernet-RTL8153-Chipset/dp/B00PC0J1VC/ref=sr_1_1?s=computers&ie=UTF8&qid=1464184877&sr=1-1&keywords=Anker+Unibody+3-Port+USB+3.0+and+Ethernet+Hub)
 
 USB 2.0 Adapter (RTL8152B Chipset)
 
-* [TP-LINK UE200 USB 2.0 to 100 Mbps Ethernet Network Adapter](https://www.amazon.co.uk/TP-LINK-UE200-Ethernet-Foldable-Ultrabook/dp/B01GRY7RHG)
+* [TP-LINK UE200 USB 2.0 to 100 Mbps Ethernet Network Adapter](https://www.amazon.co.uk/TP-LINK-UE200-Ethernet-Foldable-Ultrabook/dp/B01GRY7RHG)  
+
+Tested by Glen Kemp  
+
+* [Smays 3-Port OTG USB-HUB and USB2.0 RJ45 Ethernet Network Adapter](https://www.amazon.co.uk/gp/product/B00WR6A57S/ref=as_li_ss_tl?ie=UTF8&psc=1&linkCode=sl1&tag=s0517-21&linkId=5815c60c53524b534b98dcd596eab09c)
 
 ### Required Software
 
