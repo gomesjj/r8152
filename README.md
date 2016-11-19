@@ -211,7 +211,7 @@ chmod a+x build-r8152-2.06.0_u55.sh
 ./build-r8152-2.06.0_u55.sh
 ```
 
-<u>*ESXi 6.0*</u>
+<u>*ESXi 6.0 and 6.5*</u>
 
 ```sh
 cd /build/vsphere/vmkdrivers-gpl
