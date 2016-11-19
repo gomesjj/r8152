@@ -1,4 +1,4 @@
-# USB NIC Driver for ESXi 5.1/5.5/6.0 (Realtek)   
+# USB NIC Driver for ESXi 5.1/5.5/6.0/6.5 (Realtek)   
 
 Realtek r8152 driver for ESXi
 
@@ -56,13 +56,19 @@ Tested by Glen Kemp
 
 CentOS 5.3-x86 64 bit DVD ISO - <http://mirror.ash.fastserv.com/centos/5.3/isos/x86_64/CentOS-5.3-x86_64-bin-DVD.iso>
 
+<u>*ESXi 6.0 and 6.5*</u>  
+
 VMware ESXi 6.0 source code (VMware-ESXI-60U2-ODP.iso) and build toolchain (VMware-TOOLCHAIN-ODP-vsphere60u2-Mar-01-2016.iso) 
 
-* ESXi 6.0 Update 2 OSS Download - <https://my.vmware.com/web/vmware/details?downloadGroup=ESXI60U2_OSS&productId=491>
+* ESXi 6.0 Update 2 OSS Download - <https://my.vmware.com/web/vmware/details?downloadGroup=ESXI60U2_OSS&productId=491>  
+
+<u>*ESXi 5.5*</u>
 
 VMware ESXi 5.5 source code (VMware-ESX-5.5.0u03-ODP.iso) and build toolchain (VMware-550u3-TOOLCHAIN-ODP_21_July_2015.iso)
 
-* ESXi 5.5 Update 3 OSS Download - <https://my.vmware.com/web/vmware/details?downloadGroup=ESXI55U3_OSS&productId=353>
+* ESXi 5.5 Update 3 OSS Download - <https://my.vmware.com/web/vmware/details?downloadGroup=ESXI55U3_OSS&productId=353>  
+
+<u>*ESXi 5.1*</u>
 
 VMware ESXi 5.1 source code and build toolchain are both included in a single file (VMware-esx-open-source-5.1.0u2.oss.tar).
 
@@ -120,12 +126,11 @@ cd ..
 ~~~
 
 
-
-<u>*ESXi 5.5 & 6.0*</u>
-
 Unlike ESXi 5.1, the ODP source code and the build toolchain for 5.5 and 6.0 are distributed as two separate ISO images. The two ISOs include hundreds of packages, but only a small subset is actually required to build the drivers.
 
-First, copy the **vmkdrivers-gpl** folder from the ODP ISO (either VMware-ESX-5.5.0u03-ODP.iso or VMware-ESXI-60U2-ODP.iso) to /build/vsphere/
+<u>*ESXi 5.5*</u>
+
+Copy the **vmkdrivers-gpl** folder from the ODP ISO (VMware-ESX-5.5.0u03-ODP.iso) to /build/vsphere/
 
 ```sh
 cp -r /cdrom/vmkdrivers-gpl /build/vsphere
@@ -134,7 +139,7 @@ umount /cdrom
 
 **Note:** The above assumes that */cdrom* is the mount point for the ISO/Physical DVD — your environment might differ.
 
-The toolchain ISO (VMware-550u3-TOOLCHAIN-ODP_21_July_2015.iso or VMware-TOOLCHAIN-ODP-vsphere60u2-Mar-01-2016.iso) includes the source for multiple libraries and tools, but only glibc, binutils and gcc at specific versions are required.
+The toolchain ISO (VMware-550u3-TOOLCHAIN-ODP_21_July_2015.iso) includes the source for multiple libraries and tools, but only glibc, binutils and gcc at specific versions are required.
 
 ```sh
 cd /build/toolchain
@@ -167,7 +172,55 @@ cd /build/toolchain/src/gcc-4.4.3-2
 bash ./install.sh
 ```
 
+<u>*ESXi 6.0*</u>  
 
+Copy the **vmkdrivers-gpl** folder from the ODP ISO (VMware-ESXI-60U2-ODP.iso) to /build/vsphere/
+
+```sh
+cp -r /cdrom/vmkdrivers-gpl /build/vsphere
+umount /cdrom
+```
+
+**Note:** The above assumes that */cdrom* is the mount point for the ISO/Physical DVD — your environment might differ.
+
+The toolchain ISO (VMware-TOOLCHAIN-ODP-vsphere60u2-Mar-01-2016.iso) includes the source for multiple libraries and tools, but only glibc, binutils and gcc at specific versions are required.
+
+```sh
+cd /build/toolchain
+tar xvf /cdrom/tc-src.tar src/gcc-4.4.3-2 src/glibc-2.3.2-95.44 src/binutils-2.22 src/common/functions
+umount /cdrom
+```
+
+**Note:** The above assumes that */cdrom* is the mount point for the ISO/Physical DVD — your environment might differ.
+
+Compile the build toolchain:
+
+*glibc*
+
+```sh
+cd /build/toolchain/src/glibc-2.3.2-95.44
+bash ./install.sh
+```
+
+*binutils*
+
+```sh
+cd /build/toolchain/src/binutils-2.22
+bash ./install.sh
+```
+
+*gcc*
+
+```sh
+cd /build/toolchain/src/gcc-4.4.3-2
+bash ./install.sh
+```
+
+<u>*ESXi 6.5*</u>
+
+The ODB source and toolchain for 6.5 are completely broken and won't produce a working driver. However, there are no differences between the 6.0 and 6.5 source files, as VMware is preparing to drop support for legacy drivers.
+
+Please follow the instructions as if compiling for ESXi 6.0, noting the changes highlighted in the sections below. 
 
 #### Building the driver
 
@@ -221,6 +274,15 @@ echo -e "VMK_NAMESPACE_REQUIRED(\"com.vmware.usb\", \"9.2.3.0\");\
 \nVMK_NAMESPACE_REQUIRED(\"com.vmware.usbnet\", \"9.2.3.0\");"\
 > BLD/build/HEADERS/92-vmkdrivers-namespace/vmkernel64/release/r8152-2.06.0/__namespace.h
 ```
+<u>*ESXi 6.5*</u>
+
+```sh
+cd /build/vsphere/vmkdrivers-gpl
+mkdir BLD/build/HEADERS/92-vmkdrivers-namespace/vmkernel64/release/r8152-2.06.0
+echo -e "VMK_NAMESPACE_REQUIRED(\"com.vmware.usb\", \"10.0\");\
+\nVMK_NAMESPACE_REQUIRED(\"com.vmware.usbnet\", \"9.2.3.0\");"\
+> BLD/build/HEADERS/92-vmkdrivers-namespace/vmkernel64/release/r8152-2.06.0/__namespace.h
+```
 
 Finally, copy the appropriate build script to **/build/vsphere/vmkdrivers-gpl** and compile the driver.
 
@@ -249,6 +311,15 @@ cd /build/vsphere/vmkdrivers-gpl
 cp /path/to/scripts/build-r8152-2.06.0_u60.sh .
 chmod a+x build-r8152-2.06.0_u60.sh
 ./build-r8152-2.06.0_u60.sh
+```
+
+<u>*ESXi 6.5*</u>
+
+```sh
+cd /build/vsphere/vmkdrivers-gpl
+cp /path/to/scripts/build-r8152-2.06.0_u65.sh .
+chmod a+x build-r8152-2.06.0_u65.sh
+./build-r8152-2.06.0_u65.sh
 ```
   
 
