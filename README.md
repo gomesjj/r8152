@@ -128,6 +128,99 @@ cd ..
 
 Unlike ESXi 5.1, the ODP source code and the build toolchain for 5.5 and 6.0 are distributed as two separate ISO images. The two ISOs include hundreds of packages, but only a small subset is actually required to build the drivers.
 
+<u>*ESXi 5.5*</u>
+
+Copy the **vmkdrivers-gpl** folder from the ODP ISO (VMware-ESX-5.5.0u03-ODP.iso) to /build/vsphere/
+
+```sh
+cp -r /cdrom/vmkdrivers-gpl /build/vsphere
+umount /cdrom
+```
+
+**Note:** The above assumes that */cdrom* is the mount point for the ISO/Physical DVD — your environment might differ.
+
+The toolchain ISO (VMware-550u3-TOOLCHAIN-ODP_21_July_2015.iso) includes the source for multiple libraries and tools, but only glibc, binutils and gcc at specific versions are required.
+
+```sh
+cd /build/toolchain
+tar xvf /cdrom/tc-src.tar src/gcc-4.4.3-2 src/glibc-2.3.2-95.44 src/binutils-2.20.1-1 src/common/functions
+umount /cdrom
+```
+
+**Note:** The above assumes that */cdrom* is the mount point for the ISO/Physical DVD — your environment might differ.
+
+Compile the build toolchain:
+
+*glibc*
+
+```sh
+cd /build/toolchain/src/glibc-2.3.2-95.44
+bash ./install.sh
+```
+
+*binutils*
+
+```sh
+cd /build/toolchain/src/binutils-2.20.1-1
+bash ./install.sh
+```
+
+*gcc*
+
+```sh
+cd /build/toolchain/src/gcc-4.4.3-2
+bash ./install.sh
+```
+
+<u>*ESXi 6.0*</u>  
+
+Copy the **vmkdrivers-gpl** folder from the ODP ISO (VMware-ESXI-60U2-ODP.iso) to /build/vsphere/
+
+```sh
+cp -r /cdrom/vmkdrivers-gpl /build/vsphere
+umount /cdrom
+```
+
+**Note:** The above assumes that */cdrom* is the mount point for the ISO/Physical DVD — your environment might differ.
+
+The toolchain ISO (VMware-TOOLCHAIN-ODP-vsphere60u2-Mar-01-2016.iso) includes the source for multiple libraries and tools, but only glibc, binutils and gcc at specific versions are required.
+
+```sh
+cd /build/toolchain
+tar xvf /cdrom/tc-src.tar src/gcc-4.4.3-2 src/glibc-2.3.2-95.44 src/binutils-2.22 src/common/functions
+umount /cdrom
+```
+
+**Note:** The above assumes that */cdrom* is the mount point for the ISO/Physical DVD — your environment might differ.
+
+Compile the build toolchain:
+
+*glibc*
+
+```sh
+cd /build/toolchain/src/glibc-2.3.2-95.44
+bash ./install.sh
+```
+
+*binutils*
+
+```sh
+cd /build/toolchain/src/binutils-2.22
+bash ./install.sh
+```
+
+*gcc*
+
+```sh
+cd /build/toolchain/src/gcc-4.4.3-2
+bash ./install.sh
+```
+
+<u>*ESXi 6.5*</u>
+
+The ODB source and toolchain for 6.5 are completely broken and won't produce a working driver. However, there are no differences between the 6.0 and 6.5 source files, as VMware is preparing to drop support for legacy drivers.
+
+Please follow the instructions as if compiling for ESXi 6.0, noting the changes highlighted in the sections below. 
  
 
 #### Building the driver
