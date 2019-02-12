@@ -1,6 +1,15 @@
-# USB NIC Driver for ESXi 5.1/5.5/6.0/6.5 (Realtek)   
+# USB NIC Driver for ESXi 5.1/5.5/6.0/6.5/6.7 (Realtek)   
 
 Realtek r8152 driver for ESXi
+
+<div class="notice--warning" markdown="1">
+**Update (12/02/19)**  
+<li>Modules compiled for ESXi 6.5 will work on ESXi 6.7 without modification</li>
+<li>Source code updated to version 2.11.0 (latest)</li>
+<li>Version 2.11.0 adds support for the upcoming 2.5G USB C Ethernet adapters (RTL8156)</li>
+<li>Build script for ESXi 6.5 added</li>
+<p></p>
+</div>  
 
 Key features:
 

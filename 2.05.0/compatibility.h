@@ -9,18 +9,6 @@
 #include <linux/version.h>
 #include <linux/in.h>
 
-#if defined(__VMKLNX__)
-        #if !defined ETH_FCS_LEN
-                #define ETH_FCS_LEN     4
-        #endif
-// missing in mii.h
-        #if !defined BMCR_SPEED10
-                #define BMCR_SPEED10 0x0000 /* Select 10Mbps */
-        #endif
-				#define local_bh_enable()
-				#define local_bh_disable()
-#endif /* #if defined(__VMKLNX__) */
-
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,31)
 	#include <linux/mdio.h>
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(3,7,0)
@@ -28,40 +16,18 @@
 #endif /* LINUX_VERSION_CODE >= KERNEL_VERSION(3,7,0) */
 #endif /* LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,31) */
 
-#if LINUX_VERSION_CODE < KERNEL_VERSION(4,12,0)
-	#define SPEED_2500				2500
-	#define SPEED_25000				25000
-#if LINUX_VERSION_CODE < KERNEL_VERSION(4,9,0)
-	#define BMCR_SPEED10				0x0000
 #if LINUX_VERSION_CODE < KERNEL_VERSION(4,5,0)
 	#define NETIF_F_CSUM_MASK			NETIF_F_ALL_CSUM
-#if LINUX_VERSION_CODE < KERNEL_VERSION(4,1,0)
-	#define IS_REACHABLE(option)			(defined(option) || \
-							 (defined(option##_MODULE) && defined(MODULE)))
 #if LINUX_VERSION_CODE < KERNEL_VERSION(4,0,0)
 	#define skb_vlan_tag_present(__skb)		vlan_tx_tag_present(__skb)
 	#define skb_vlan_tag_get(__skb)			vlan_tx_tag_get(__skb)
 	#define skb_vlan_tag_get_id(__skb)		vlan_tx_tag_get_id(__skb)
-#if LINUX_VERSION_CODE < KERNEL_VERSION(3,19,0)
-	#define napi_alloc_skb(napi, length)		netdev_alloc_skb_ip_align(netdev,length)
-	#define napi_complete_done(n, d)		napi_complete(n)
-#if LINUX_VERSION_CODE < KERNEL_VERSION(3,16,0)
-	#ifndef smp_mb__before_atomic
-	#define smp_mb__before_atomic()			smp_mb()
-	#endif
-
-	#ifndef smp_mb__after_atomic
-	#define smp_mb__after_atomic()			smp_mb()
-	#endif
-#if LINUX_VERSION_CODE < KERNEL_VERSION(3,15,0)
-	#define IS_ERR_OR_NULL(ptr)			(!ptr)
 #if LINUX_VERSION_CODE < KERNEL_VERSION(3,14,0)
 	#define ether_addr_copy(dst, src)		memcpy(dst, src, ETH_ALEN)
 #if LINUX_VERSION_CODE < KERNEL_VERSION(3,13,0)
 	#define BIT(nr)					(1UL << (nr))
 	#define BIT_ULL(nr)				(1ULL << (nr))
 	#define BITS_PER_BYTE				8
-	#define reinit_completion(x)			((x)->done = 0)
 #if LINUX_VERSION_CODE < KERNEL_VERSION(3,10,0)
 	#define NETIF_F_HW_VLAN_CTAG_RX			NETIF_F_HW_VLAN_RX
 	#define NETIF_F_HW_VLAN_CTAG_TX			NETIF_F_HW_VLAN_TX
@@ -70,22 +36,21 @@
 		USB_DEVICE_AND_INTERFACE_INFO(vend, prod, iclass, 0xff, 0)
 
 #if !defined(__VMKLNX__)
-
-		        static inline __sum16 tcp_v6_check(int len,
-		                                           const struct in6_addr *saddr,
-		                                           const struct in6_addr *daddr,
-		                                           __wsum base)
-		        {
-		                return csum_ipv6_magic(saddr, daddr, len, IPPROTO_TCP, base);
-		        }
-		#else
-		        static inline __sum16 tcp_v6_check(int len,
-		                                           struct in6_addr *saddr,
-		                                           struct in6_addr *daddr,
-		                                           __wsum base)
-		        {
-		                return csum_ipv6_magic(saddr, daddr, len, IPPROTO_TCP, base);
-		        }
+        static inline __sum16 tcp_v6_check(int len,
+                                           const struct in6_addr *saddr,
+                                           const struct in6_addr *daddr,
+                                           __wsum base)
+        {
+                return csum_ipv6_magic(saddr, daddr, len, IPPROTO_TCP, base);
+        }
+#else
+        static inline __sum16 tcp_v6_check(int len,
+                                           struct in6_addr *saddr,
+                                           struct in6_addr *daddr,
+                                           __wsum base)
+        {
+                return csum_ipv6_magic(saddr, daddr, len, IPPROTO_TCP, base);
+        }
 
 #endif /* #if !defined(__VMKLNX__) */
 
@@ -114,17 +79,12 @@
 
 #endif /* #if (VMWARE_ESX_DDK_VERSION <= 51000) */
 
-#if LINUX_VERSION_CODE < KERNEL_VERSION(3,7,0)
-	#ifndef SPEED_UNKNOWN
-		#define SPEED_UNKNOWN		0
-	#endif
+#if defined(__VMKLNX__)
+u32 ethtool_op_get_rx_csum(struct net_device *dev);
+#endif /* #if !defined(__VMKLNX__) */
 
-	#ifndef DUPLEX_UNKNOWN
-		#define DUPLEX_UNKNOWN		0xff
-	#endif
 #if LINUX_VERSION_CODE < KERNEL_VERSION(3,6,0)
 	#define eth_random_addr(addr)			random_ether_addr(addr)
-	#define usb_enable_lpm(udev)
 	#define MDIO_EEE_100TX				MDIO_AN_EEE_ADV_100TX	/* 100TX EEE cap */
 	#define MDIO_EEE_1000T				MDIO_AN_EEE_ADV_1000T	/* 1000T EEE cap */
 #if LINUX_VERSION_CODE < KERNEL_VERSION(3,4,0)
@@ -208,8 +168,6 @@
 
 		udelay(min % 1000);
 	}
-
-	#define work_busy(x)				0
 #if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,35)
 	static inline bool pci_dev_run_wake(struct pci_dev *dev)
 	{
@@ -240,13 +198,13 @@
 	#define netif_info(priv, type, netdev, fmt, args...)		\
 		netif_printk(priv, type, KERN_INFO, (netdev), fmt, ##args)
 
-		#if !defined(__VMKLNX__)
-		static inline int usb_enable_autosuspend(struct usb_device *udev)
-		{ return 0; }
-		static inline int usb_disable_autosuspend(struct usb_device *udev)
-		{ return 0; }
-	#endif /* #if !defined(__VMKLNX__) */
-
+#if !defined(__VMKLNX__)
+	static inline int usb_enable_autosuspend(struct usb_device *udev)
+	{ return 0; }
+	static inline int usb_disable_autosuspend(struct usb_device *udev)
+	{ return 0; }
+#endif /* #if !defined(__VMKLNX__) */
+	
 #if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,33)
 	#define get_sset_count				get_stats_count
 
@@ -273,65 +231,66 @@
 	#define pm_runtime_disable(para)
 	typedef int netdev_tx_t;
 #if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,31)
-#if !defined(__VMKLNX__)
-			#define USB_SPEED_SUPER			(USB_SPEED_VARIABLE + 1)
-#else
-#define USB_SPEED_SUPER				(USB_SPEED_WIRELESS + 1)
-#endif /* #if !defined(__VMKLNX__) */
 
+#if !defined(__VMKLNX__)
+        #define USB_SPEED_SUPER			(USB_SPEED_VARIABLE + 1)
+#else
+	#define USB_SPEED_SUPER				(USB_SPEED_WIRELESS + 1)
+#endif /* #if !defined(__VMKLNX__) */
+	
 	#define MDIO_MMD_AN				7	/* Auto-Negotiation */
 #if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,29)
 	#define napi_gro_receive(napi, skb)		netif_receive_skb(skb)
 	#define vlan_gro_receive(napi, grp, vlan_tci, skb) \
 		vlan_hwaccel_receive_skb(skb, grp, vlan_tci)
 
-		#if !defined(__VMKLNX__)
-		        static inline void usb_autopm_put_interface_async(struct usb_interface *intf)
-		        {
-		                struct usb_device *udev = interface_to_usbdev(intf);
-		                int status = 0;
+#if !defined(__VMKLNX__)
+        static inline void usb_autopm_put_interface_async(struct usb_interface *intf)
+        {
+                struct usb_device *udev = interface_to_usbdev(intf);
+                int status = 0;
 
-		                if (intf->condition == USB_INTERFACE_UNBOUND) {
-		                        status = -ENODEV;
-		                } else {
-		                        udev->last_busy = jiffies;
-		                        --intf->pm_usage_cnt;
-		                        if (udev->autosuspend_disabled || udev->autosuspend_delay < 0)
-		                                status = -EPERM;
-		                }
-		        }
+                if (intf->condition == USB_INTERFACE_UNBOUND) {
+                        status = -ENODEV;
+                } else {
+                        udev->last_busy = jiffies;
+                        --intf->pm_usage_cnt;
+                        if (udev->autosuspend_disabled || udev->autosuspend_delay < 0)
+                                status = -EPERM;
+                }
+        }
 
-		        static inline int usb_autopm_get_interface_async(struct usb_interface *intf)
-		        {
-		                struct usb_device *udev = interface_to_usbdev(intf);
-		                int status = 0;
+        static inline int usb_autopm_get_interface_async(struct usb_interface *intf)
+        {
+                struct usb_device *udev = interface_to_usbdev(intf);
+                int status = 0;
 
-		                if (intf->condition == USB_INTERFACE_UNBOUND)
-		                        status = -ENODEV;
-		                else if (udev->autoresume_disabled)
-		                        status = -EPERM;
-		                else
-		                        ++intf->pm_usage_cnt;
-		                return status;
-		        }
+                if (intf->condition == USB_INTERFACE_UNBOUND)
+                        status = -ENODEV;
+                else if (udev->autoresume_disabled)
+                        status = -EPERM;
+                else
+                        ++intf->pm_usage_cnt;
+                return status;
+        }
 
-		        static inline int eth_change_mtu(struct net_device *dev, int new_mtu)
-		        {
-		                if (new_mtu < 68 || new_mtu > ETH_DATA_LEN)
-		                        return -EINVAL;
-		                dev->mtu = new_mtu;
-		                return 0;
-		        }
-		#else
-			static int eth_change_mtu(struct net_device *netdev, int new_mtu)
-			{
-				if (new_mtu < 68 || new_mtu > ETH_DATA_LEN)
-					return -EINVAL;
-				netdev->mtu = new_mtu;
-				return 0;
-			}
-		#endif /* #if !defined(__VMKLNX__) */
-
+        static inline int eth_change_mtu(struct net_device *dev, int new_mtu)
+        {
+                if (new_mtu < 68 || new_mtu > ETH_DATA_LEN)
+                        return -EINVAL;
+                dev->mtu = new_mtu;
+                return 0;
+        }
+#else
+	static int eth_change_mtu(struct net_device *netdev, int new_mtu)
+	{
+		if (new_mtu < 68 || new_mtu > ETH_DATA_LEN)
+			return -EINVAL;
+		netdev->mtu = new_mtu;
+		return 0;
+	}
+#endif /* #if !defined(__VMKLNX__) */
+	
 #if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,28)
 	static inline void __skb_queue_splice(const struct sk_buff_head *list,
 					      struct sk_buff *prev,
@@ -374,29 +333,29 @@
 #if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,27)
 	#define PM_EVENT_AUTO		0x0400
 
-	#if !defined(__VMKLNX__)
-	        static inline void __list_splice2(const struct list_head *list,
-	                                          struct list_head *prev,
-	                                          struct list_head *next)
-	        {
-	                struct list_head *first = list->next;
-	                struct list_head *last = list->prev;
+#if !defined(__VMKLNX__)
+        static inline void __list_splice2(const struct list_head *list,
+                                          struct list_head *prev,
+                                          struct list_head *next)
+        {
+                struct list_head *first = list->next;
+                struct list_head *last = list->prev;
 
-	                first->prev = prev;
-	                prev->next = first;
+                first->prev = prev;
+                prev->next = first;
 
-	                last->next = next;
-	                next->prev = last;
-	        }
+                last->next = next;
+                next->prev = last;
+        }
 
-	        static inline void list_splice_tail(struct list_head *list,
-	                                            struct list_head *head)
-	        {
-	                if (!list_empty(list))
-	                        __list_splice2(list, head->prev, head);
-	        }
-	#endif /* !defined(__VMKLNX__) */
-
+        static inline void list_splice_tail(struct list_head *list,
+                                            struct list_head *head)
+        {
+                if (!list_empty(list))
+                        __list_splice2(list, head->prev, head);
+        }
+#endif /* !defined(__VMKLNX__) */
+		
 #if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,24)
 
 #if !defined(__VMKLNX__)
@@ -447,14 +406,14 @@
 	#define ip_hdr(skb_ptr)				(skb_ptr)->nh.iph
 	#define ipv6hdr(skb_ptr)			(skb_ptr)->nh.ipv6h
 
-	#if !defined(__VMKLNX__)
-	        static inline void skb_copy_from_linear_data(const struct sk_buff *skb,
-	                                                     void *to,
-	                                                     const unsigned int len)
-	        {
-	                memcpy(to, skb->data, len);
-	        }
-	#endif /* #if !defined(__VMKLNX__) */
+#if !defined(__VMKLNX__)
+        static inline void skb_copy_from_linear_data(const struct sk_buff *skb,
+                                                     void *to,
+                                                     const unsigned int len)
+        {
+                memcpy(to, skb->data, len);
+        }
+#endif /* #if !defined(__VMKLNX__) */
 
 #if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,21)
 	#define vlan_group_set_device(vlgrp, vid, value) \
@@ -468,21 +427,20 @@
 #endif /* #if !defined(__VMKLNX__) */
 
 #if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,19)
-	#define CHECKSUM_PARTIAL			CHECKSUM_HW
 
-	#if !defined(__VMKLNX__)
-	        #define CHECKSUM_PARTIAL                        CHECKSUM_HW
+#if !defined(__VMKLNX__)
+        #define CHECKSUM_PARTIAL                        CHECKSUM_HW
 
-	        static inline void *kmemdup(const void *src, size_t len, gfp_t gfp)
-	        {
-	                void *p;
+        static inline void *kmemdup(const void *src, size_t len, gfp_t gfp)
+        {
+                void *p;
 
-	                p = kmalloc_track_caller(len, gfp);
-	                if (p)
-	                        memcpy(p, src, len);
-	                return p;
-	        }
-	#endif /* #if !defined(__VMKLNX__) */
+                p = kmalloc_track_caller(len, gfp);
+                if (p)
+                        memcpy(p, src, len);
+                return p;
+        }
+#endif /* #if !defined(__VMKLNX__) */
 
 #if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,18)
 	#define skb_is_gso(skb_ptr)			skb_shinfo(skb_ptr)->tso_size
@@ -517,8 +475,6 @@
 #endif /* LINUX_VERSION_CODE < KERNEL_VERSION(2,6,22) */
 #endif /* LINUX_VERSION_CODE < KERNEL_VERSION(2,6,23) */
 #endif /* LINUX_VERSION_CODE < KERNEL_VERSION(2,6,24) */
-
-
 #if !defined(__VMKLNX__)
         static inline void netif_napi_del(struct napi_struct *napi)
         {
@@ -534,7 +490,6 @@
         #endif
         }
 #endif /* #if !defined(__VMKLNX__) */
-
 #endif /* LINUX_VERSION_CODE < KERNEL_VERSION(2,6,27) */
 #endif /* LINUX_VERSION_CODE < KERNEL_VERSION(2,6,28) */
 #endif /* LINUX_VERSION_CODE < KERNEL_VERSION(2,6,29) */
@@ -552,19 +507,12 @@
 #endif /* LINUX_VERSION_CODE < KERNEL_VERSION(3,3,0) */
 #endif /* LINUX_VERSION_CODE < KERNEL_VERSION(3,4,0) */
 #endif /* LINUX_VERSION_CODE < KERNEL_VERSION(3,6,0) */
-#endif /* LINUX_VERSION_CODE < KERNEL_VERSION(3,7,0) */
 #endif /* LINUX_VERSION_CODE < KERNEL_VERSION(3,8,0) */
 #endif /* LINUX_VERSION_CODE < KERNEL_VERSION(3,10,0) */
 #endif /* LINUX_VERSION_CODE < KERNEL_VERSION(3,13,0) */
 #endif /* LINUX_VERSION_CODE < KERNEL_VERSION(3,14,0) */
-#endif /* LINUX_VERSION_CODE < KERNEL_VERSION(3,15,0) */
-#endif /* LINUX_VERSION_CODE < KERNEL_VERSION(3,16,0) */
-#endif /* LINUX_VERSION_CODE < KERNEL_VERSION(3,19,0) */
 #endif /* LINUX_VERSION_CODE < KERNEL_VERSION(4,0,0) */
-#endif /* LINUX_VERSION_CODE < KERNEL_VERSION(4,1,0) */
 #endif /* LINUX_VERSION_CODE < KERNEL_VERSION(4,5,0) */
-#endif /* LINUX_VERSION_CODE < KERNEL_VERSION(4,9,0) */
-#endif /* LINUX_VERSION_CODE < KERNEL_VERSION(4,12,0) */
 
 #ifndef FALSE
 	#define TRUE	1
