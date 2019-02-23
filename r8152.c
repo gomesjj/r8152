@@ -1515,7 +1515,9 @@ static void free_all_mem(struct r8152 *tp)
 
 static int alloc_all_mem(struct r8152 *tp)
 {
+#if !defined(__VMKLNX__)
 	struct net_device *netdev = tp->netdev;
+#endif /* #if !defined(__VMKLNX__) */
 	struct usb_interface *intf = tp->intf;
 	struct usb_host_interface *alt = intf->cur_altsetting;
 	struct usb_host_endpoint *ep_intr = alt->endpoint + 2;
@@ -2099,7 +2101,9 @@ static int rx_bottom(struct r8152 *tp, int budget)
 	unsigned long flags;
 	struct list_head *cursor, *next, rx_queue;
 	int ret = 0, work_done = 0;
+#if !defined(__VMKLNX__)
 	struct napi_struct *napi = &tp->napi;
+#endif /* !defined(__VMKLNX__) */
 
 	if (!skb_queue_empty(&tp->rx_queue)) {
 		while (work_done < budget) {
@@ -12662,10 +12666,17 @@ static int rtl8152_probe(struct usb_interface *intf,
 
 	netdev->watchdog_timeo = RTL8152_TX_TIMEOUT;
 
-	netdev->features |= NETIF_F_RXCSUM | NETIF_F_IP_CSUM | NETIF_F_SG |
-			    NETIF_F_TSO | NETIF_F_FRAGLIST | NETIF_F_IPV6_CSUM |
-			    NETIF_F_TSO6 | NETIF_F_HW_VLAN_CTAG_RX |
-			    NETIF_F_HW_VLAN_CTAG_TX;
+#if !defined(__VMKLNX__)
+        netdev->features |= NETIF_F_RXCSUM | NETIF_F_IP_CSUM | NETIF_F_SG |
+                 NETIF_F_TSO | NETIF_F_FRAGLIST | NETIF_F_IPV6_CSUM |
+                 NETIF_F_TSO6 | NETIF_F_HW_VLAN_CTAG_RX |
+                 NETIF_F_HW_VLAN_CTAG_TX;
+#else
+        netdev->features |= NETIF_F_RXCSUM | NETIF_F_IP_CSUM |
+                 NETIF_F_FRAGLIST | NETIF_F_IPV6_CSUM |
+                 NETIF_F_TSO6 | NETIF_F_HW_VLAN_CTAG_RX |
+                 NETIF_F_HW_VLAN_CTAG_TX;
+#endif /* #if !defined(__VMKLNX__) */
 
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,39)
 	netdev->hw_features = NETIF_F_RXCSUM | NETIF_F_IP_CSUM | NETIF_F_SG |
@@ -12677,12 +12688,12 @@ static int rtl8152_probe(struct usb_interface *intf,
 				NETIF_F_IPV6_CSUM | NETIF_F_TSO6;
 #endif /* LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,39) */
 
-	if (tp->version == RTL_VER_01) {
-		netdev->features &= ~NETIF_F_RXCSUM;
+        if (tp->version == RTL_VER_01) {
+                netdev->features &= ~NETIF_F_RXCSUM;
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,39)
-		netdev->hw_features &= ~NETIF_F_RXCSUM;
+                netdev->hw_features &= ~NETIF_F_RXCSUM;
 #endif /* LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,39) */
-	}
+        }
 
 	netdev->ethtool_ops = &ops;
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,26)
