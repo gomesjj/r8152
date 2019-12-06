@@ -222,6 +222,10 @@ bash ./install.sh
 
 ```sh
 cd /build/toolchain/src/gcc-4.4.3-2
+```
+Be sure to correct the BUVER var in build.sh to point to the correct version of binutils...
+```sh
+sed -i 's/export BUVER=2.20.1-1/export BUVER=2.22/g' build.sh
 bash ./install.sh
 ```
 
